@@ -26,7 +26,7 @@
  */
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "face_detection");
+    ros::init(argc, argv, "face_detection_tracker");
 
     /** @face_detection_tracker */
     FaceDetectionTracker fd;
@@ -36,6 +36,8 @@ int main(int argc, char** argv)
     while (ros::ok())
     {
         ros::spinOnce();
+
+        fd.track();
     }
 
     return 0;
