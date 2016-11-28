@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(face_detection_tracking)
+project(face_detection_tracker)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -142,10 +142,10 @@ include_directories(
 # add_executable(visual_debug_node src/visual_debug_node.cpp)
 
 ## Declare a C++ library
-add_library(face_detection_tracking_library src/face_detection_tracker.cpp)
+add_library(face_detection_tracker_library src/face_detection_tracker.cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(face_detection_tracking_library ${roscpp_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(face_detection_tracker_library ${roscpp_LIBRARIES} ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -204,5 +204,5 @@ target_link_libraries(face_detection_tracking_library ${roscpp_LIBRARIES} ${catk
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(face_detection_tracking src/main.cpp)
-target_link_libraries(face_detection_tracking face_detection_tracking_library ${catkin_LIBRARIES} )
+add_executable(face_detection_tracker src/main.cpp)
+target_link_libraries(face_detection_tracker face_detection_tracker_library ${catkin_LIBRARIES} )
