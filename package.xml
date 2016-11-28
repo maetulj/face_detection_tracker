@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<package>
+    <name>face_detection_tracking</name>
+    <version>0.0.1</version>
+    <description>Face detection and tracking using kinect camera.</description>
+
+    <author>maetulj</author>
+    <maintainer>maetulj</maintainer>
+
+
+    <!-- One license tag required, multiple allowed, one license per tag -->
+    <!-- Commonly used license strings: -->
+    <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+    <license>MIT</license>
+
+
+
+    <buildtool_depend>catkin</buildtool_depend>
+    <build_depend>message_generation</build_depend>
+    <build_depend>rospy</build_depend>
+    <build_depend>roscpp</build_depend>
+    <build_depend>cf_libs</build_depend>
+    <build_depend>sensor_msgs</build_depend>
+    <build_depend>cv_bridge</build_depend>
+    <build_depend>std_msgs</build_depend>
+    <build_depend>image_transport</build_depend>
+
+
+    <run_depend>rospy</run_depend>
+    <run_depend>message_runtime</run_depend>
+    <run_depend>roscpp</run_depend>
+
+
+
+    <!-- The export tag contains other, unspecified, tags -->
+    <export>
+        <!-- Other tools can request additional information be placed here -->
+    </export>
+</package>
