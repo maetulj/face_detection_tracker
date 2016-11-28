@@ -155,7 +155,7 @@ private:
     ros::Publisher bbPub;
 
     // Tracker parameters.
-    cf_tracking::KcfParameters paras;
+    cf_tracking::KcfParameters m_paras;
 
     std::vector<cf_tracking::KcfTracker*> vKCF;
 
