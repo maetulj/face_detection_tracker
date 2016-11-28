@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-    <name>face_detection_tracking</name>
+    <name>face_detection_tracker</name>
     <version>0.0.1</version>
     <description>Face detection and tracking using kinect camera.</description>
 
