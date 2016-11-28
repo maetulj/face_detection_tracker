@@ -234,6 +234,9 @@ target_link_libraries(face_detection_tracker_library ${roscpp_LIBRARIES} ${catki
 #   ${catkin_LIBRARIES}
 # )
 
+add_executable(face_detection_tracker src/main.cpp)
+target_link_libraries(face_detection_tracker face_detection_tracker_library ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} KCFtracker)
+
 #############
 ## Install ##
 #############
@@ -288,5 +291,4 @@ install(TARGETS KCFtracker face_detection_tracker
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 
-add_executable(face_detection_tracker src/main.cpp)
-target_link_libraries(face_detection_tracker face_detection_tracker_library ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} KCFtracker)
+

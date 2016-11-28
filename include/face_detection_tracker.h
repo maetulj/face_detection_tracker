@@ -65,12 +65,12 @@ public:
     /**
      * @brief      Constructor for the class.
      */
-    FaceDetection();
+    FaceDetectionTracker();
 
     /**
      * @brief      Destructor.
      */
-    ~FaceDetection();
+    ~FaceDetectionTracker();
 
     /**
      * @brief      Function for detecting and displaying the faces.
