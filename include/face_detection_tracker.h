@@ -39,6 +39,10 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+// Third party includes for tracking.
+#include "../cf_libs/kcf/kcf_tracker.hpp"
+#include <perception_msgs/Rect.h>
+
 // Self defined includes.
 #include <perception_msgs/Rect.h>
 
@@ -68,15 +72,6 @@ public:
      */
     ~FaceDetection();
 
-
-    /**
-     * @brief      Callback for the sensor_msgs::Image.
-     *
-     * @param[in]  msg   The image in a form of a sensor_msgs::Image.
-     */
-    void imageCallback(const sensor_msgs::ImageConstPtr &msg);
-
-
     /**
      * @brief      Function for detecting and displaying the faces.
      *
@@ -84,12 +79,24 @@ public:
      */
     void detectAndDisplay(cv::Mat frame);
 
+    /**
+     * @brief      Track the object.
+     */
+    void track();
+
 private:
     // The ros node handle.
     ros::NodeHandle m_node;
 
     std::string m_windowName{"Face detection"};
     std::string m_directory{"/home/maetulj/tiago_ws/src/face_detection/"};
+
+    // Buffer for publishers, subscibers.
+    int m_queuesize = 2;
+
+    ////////////////////////////
+    /// Face detection part. ///
+    ////////////////////////////
 
     // Helper member variables for image transformation.
     image_transport::ImageTransport m_it;
@@ -112,6 +119,68 @@ private:
 
     // Variable to hold the detection rectangle.
     perception_msgs::Rect m_msgRect;
+
+    /**
+     * @brief      Callback for the sensor_msgs::Image.
+     *
+     * @param[in]  msg   The image in a form of a sensor_msgs::Image.
+     */
+    void imageCallback(const sensor_msgs::ImageConstPtr &msg);
+
+
+    //////////////////////
+    /// Tracking part. ///
+    //////////////////////
+
+    // Cv Bridge variables for transforming sensor_msgs::Image into cv::Mat
+    cv_bridge::CvImagePtr m_inImg;
+
+    perception_msgs::Rect m_inBb;
+    perception_msgs::Rect m_outBb;
+
+    // local variables
+    cv::Mat img;
+    cv::Rect bb;
+
+    // Detected face number to track.
+    int i = 0;
+
+    // Declare and initialize subscribers, rgb image and the 2D region to track.
+    ros::Subscriber rgbimgSub;
+
+    // Face detection subscriber.
+    ros::Subscriber bbSub;
+
+    //Declare and initialize publishers, 2D region tracked region.
+    ros::Publisher bbPub;
+
+    // Tracker parameters.
+    cf_tracking::KcfParameters paras;
+
+    std::vector<cf_tracking::KcfTracker*> vKCF;
+
+    // Declare tracker.
+    cf_tracking::KcfTracker *cKCF;
+
+    // The tracker is running.
+    bool tracking = false;
+
+    // If the tracker is on frame.
+    bool targetOnFrame = false;
+
+    /**
+     * @brief      Callback function for gettint sensor image.
+     *
+     * @param[in]  _img  The image
+     */
+    void callbackimage(const sensor_msgs::ImageConstPtr &_img);
+
+    /**
+     * @brief      Callback for perception rectangle.
+     *
+     * @param[in]  _bb   Bounding box.
+     */
+    void callbackbb(const perception_msgs::RectConstPtr &_bb);
 };
 
 #endif // FACE_DETECTION_TRACKER_H
