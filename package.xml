@@ -4,8 +4,8 @@
     <version>0.0.1</version>
     <description>Face detection and tracking using kinect camera.</description>
 
-    <author>maetulj</author>
-    <maintainer>maetulj</maintainer>
+    <author email="maetulj@gmail.com">maetulj</author>
+    <maintainer email="maetulj@gmail.com">maetulj</maintainer>
 
 
     <!-- One license tag required, multiple allowed, one license per tag -->
@@ -29,8 +29,6 @@
     <run_depend>rospy</run_depend>
     <run_depend>message_runtime</run_depend>
     <run_depend>roscpp</run_depend>
-
-
 
     <!-- The export tag contains other, unspecified, tags -->
     <export>
