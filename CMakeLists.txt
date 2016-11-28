@@ -1,6 +1,69 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(face_detection_tracker)
 
+################################################
+## Declare ROS messages, services and actions ##
+################################################
+
+# option to enable OpenMP; only relevant for the KCF version with the
+# VOT scale estimation
+option(WITH_OPENMP "Enable OpenMP" OFF)
+
+if(WITH_OPENMP)
+    find_package(OpenMP REQUIRED)
+
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif(WITH_OPENMP)
+
+# add c++11 support
+if(CMAKE_COMPILER_IS_GNUCC)
+    ADD_DEFINITIONS ( -std=c++11 )
+endif(CMAKE_COMPILER_IS_GNUCC)
+
+# add OpenCV
+set(OPENCV_DIR_HINT "")
+
+if(WIN32)
+    get_filename_component(OPENCV_DIR_PLATFORM $ENV{OPENCV_DIR} DIRECTORY)
+    get_filename_component(OPENCV_DIR_HINT ${OPENCV_DIR_PLATFORM} DIRECTORY)
+endif(WIN32)
+
+set(OpenCV_STATIC OFF)
+find_package(OpenCV REQUIRED HINTS ${OPENCV_DIR_HINT})
+
+# add 3rdparty source
+set(CF_TCLAP_DIR "3rdparty/tclap")
+set(CF_CV_EXT_DIR "3rdparty/cv_ext")
+set(CF_PIOTR_DIR "3rdparty/piotr")
+
+set(CF_PIOTR_SOURCES
+    ${CF_PIOTR_DIR}/gradientMex.hpp
+    ${CF_PIOTR_DIR}/src/gradientMex.cpp
+    ${CF_PIOTR_DIR}/src/sse.hpp
+    ${CF_PIOTR_DIR}/src/wrappers.hpp)
+
+set(CF_LIB_COMMON_SOURCES
+    cf_libs/common/feature_channels.hpp
+    cf_libs/common/mat_consts.hpp
+    cf_libs/common/math_helper.hpp
+    cf_libs/common/math_helper.cpp
+    cf_libs/common/cf_tracker.hpp
+    cf_libs/common/tracker_debug.hpp
+    cf_libs/common/scale_estimator.hpp
+    cf_libs/common/cv_ext.hpp
+    ${CF_CV_EXT_DIR}/shift.cpp
+    ${CF_CV_EXT_DIR}/shift.hpp
+    ${CF_CV_EXT_DIR}/math_spectrums.cpp
+    ${CF_CV_EXT_DIR}/math_spectrums.hpp
+    ${CF_CV_EXT_DIR}/psr.hpp
+    ${CF_PIOTR_SOURCES})
+
+#############
+## PROGRAM ##
+#############
+
+
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -12,6 +75,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   image_transport
+  message_filters
 )
 
 
@@ -109,9 +173,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    INCLUDE_DIRS include
+    INCLUDE_DIRS include cf_libs
 #  LIBRARIES visual_debug
-    CATKIN_DEPENDS roscpp
+    CATKIN_DEPENDS roscpp message_runtime
 #  DEPENDS system_lib
 )
 
@@ -124,6 +188,14 @@ catkin_package(
 # include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+  ${CF_TCLAP_DIR}
+  ${CF_CV_EXT_DIR}
+  ${CF_PIOTR_DIR}
+  ${CF_PIOTR_DIR}/src
+  cf_libs/kcf
+  cf_libs/dsst
+  cf_libs/common
   include
   ${roscpp_INCLUDE_DIRS}
 )
@@ -132,6 +204,12 @@ include_directories(
 # add_library(visual_debug
 #   src/${PROJECT_NAME}/visual_debug.cpp
 # )
+
+add_library(KCFtracker cf_libs/kcf/kcf_debug.hpp cf_libs/kcf/kcf_tracker.hpp ${CF_LIB_COMMON_SOURCES})
+target_link_libraries(KCFtracker
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -145,7 +223,7 @@ include_directories(
 add_library(face_detection_tracker_library src/face_detection_tracker.cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(face_detection_tracker_library ${roscpp_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(face_detection_tracker_library ${roscpp_LIBRARIES} ${catkin_LIBRARIES} KCFtracker)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -191,6 +269,12 @@ target_link_libraries(face_detection_tracker_library ${roscpp_LIBRARIES} ${catki
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
+install(TARGETS KCFtracker trackernode
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 #############
 ## Testing ##
 #############
@@ -205,4 +289,4 @@ target_link_libraries(face_detection_tracker_library ${roscpp_LIBRARIES} ${catki
 # catkin_add_nosetests(test)
 
 add_executable(face_detection_tracker src/main.cpp)
-target_link_libraries(face_detection_tracker face_detection_tracker_library ${catkin_LIBRARIES} )
+target_link_libraries(face_detection_tracker face_detection_tracker_library ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} KCFtracker)
