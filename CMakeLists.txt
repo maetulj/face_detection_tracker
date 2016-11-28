@@ -269,7 +269,7 @@ target_link_libraries(face_detection_tracker_library ${roscpp_LIBRARIES} ${catki
 #   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
 # )
 
-install(TARGETS KCFtracker trackernode
+install(TARGETS KCFtracker face_detection_tracker
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
