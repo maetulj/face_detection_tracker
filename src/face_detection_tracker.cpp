@@ -2,8 +2,8 @@
 #include <sensor_msgs/JointState.h>
 
 // Initialize static members.
-bool TrackerNode::m_newImage_static = false;
-bool TrackerNode::m_newBB_static = false;
+bool FaceDetectionTracker::m_newImage_static = false;
+bool FaceDetectionTracker::m_newBB_static = false;
 
 /**
  * @brief      Constructor for the class.
