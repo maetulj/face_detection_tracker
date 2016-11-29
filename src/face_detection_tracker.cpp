@@ -41,9 +41,9 @@ FaceDetectionTracker::FaceDetectionTracker() :
     /// Tracker part. ///
     /////////////////////
 
-    rgbimgSub = m_node.subscribe<sensor_msgs::Image>("kinect2/qhd/image_color_rect", m_queuesize, &FaceDetectionTracker::callbackimage, this);
+    // rgbimgSub = m_node.subscribe<sensor_msgs::Image>("kinect2/qhd/image_color_rect", m_queuesize, &FaceDetectionTracker::callbackimage, this);
 
-    bbSub = m_node.subscribe<perception_msgs::Rect>("face_detection/bb", m_queuesize, &FaceDetectionTracker::callbackbb, this);
+    // bbSub = m_node.subscribe<perception_msgs::Rect>("face_detection/bb", m_queuesize, &FaceDetectionTracker::callbackbb, this);
 
     bbPub = m_node.advertise<perception_msgs::Rect>("tracker/bb", m_queuesize);
 
@@ -122,16 +122,20 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         // cv::Point center(faces[i].x + faces[i].width * 0.5, faces[i].y + faces[i].height * 0.5);
 
         // Point in the upper left corner.
-        cv::Point p1(faces[i].x, faces[i].y);
+        m_p1(faces[i].x, faces[i].y);
 
         // Point in the lower right corner.
-        cv::Point p2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
+        m_p2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
+
+        m_width = faces[i].width;
+        m_height = faces[i].height;
 
         /*
         cv::ellipse(frame, center, Size( faces[i].width * 0.5, faces[i].height * 0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
         */
+
         // Draw the rectangle on the frame.
-        cv::rectangle(frame, p1, p2, Scalar(0, 0, 255), 4, 8, 0);
+        cv::rectangle(frame, m_p1, m_p2, Scalar(0, 0, 255), 4, 8, 0);
 
         // Create the header.
         m_msgRect.header = m_cvPtr->header;
@@ -143,6 +147,9 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
 
         // Output perception_msgs.
         m_perceptPub.publish(m_msgRect);
+
+        // Signal a new bounding box.
+        m_newBB_static = true;
     }
 
 #ifdef DEBUG // Enable/Disable in the header.
@@ -192,7 +199,8 @@ void FaceDetectionTracker::track()
     if (m_newImage_static)
     {
         // Resize the image.
-        cv::resize(m_inImg->image, img, cv::Size(m_inImg->image.cols / 2, m_inImg->image.rows / 2));
+        // Done in detecting part.
+        // cv::resize(m_cvPtr->image, img, cv::Size(m_cvPtr->image.cols / 2, m_cvPtr->image.rows / 2));
 
         // If new bounding box arrived (detected face) && we are not yet tracking anything.
         if (m_newBB_static && !tracking)
@@ -202,13 +210,13 @@ void FaceDetectionTracker::track()
             cKCF = new cf_tracking::KcfTracker(m_paras);
 
             // Save the incoming bounding box to a private member.
-            bb.x = m_inBb.x;
-            bb.y = m_inBb.y;
-            bb.height = m_inBb.height;
-            bb.width = m_inBb.width;
+            bb.x = m_p1.x; // m_inBb.x;
+            bb.y = m_p1.y; // m_inBb.y;
+            bb.height = m_height; // m_inBb.height;
+            bb.width = m_width; //m_inBb.width;
 
             // Reinitialize the tracker.
-            if (cKCF->reinit(img, bb)) // KcfTracker->reinit(cv::Mat, cv::Rect)
+            if (cKCF->reinit(m_cvPtr->image, bb)) // KcfTracker->reinit(cv::Mat, cv::Rect)
             {
                 // This means that it is correctly initalized.
                 tracking = true;
@@ -227,13 +235,13 @@ void FaceDetectionTracker::track()
         if (targetOnFrame)
         {
             // Save the incoming bounding box to a private member.
-            bb.x = m_inBb.x;
-            bb.y = m_inBb.y;
-            bb.width = m_inBb.width;
-            bb.height = m_inBb.height;
+            bb.x = m_p1.x; // m_inBb.x;
+            bb.y = m_p2.y; // m_inBb.y;
+            bb.width = m_width; // m_inBb.width;
+            bb.height = m_height; // m_inBb.height;
 
             // Update the current tracker (if we have one)!
-            targetOnFrame = cKCF->update(img, bb); //vKCF[i]->update(img, bb); // KcfTracker->reinit(cv::Mat, cv::Rect)
+            targetOnFrame = cKCF->update(m_cvPtr->image, bb); //vKCF[i]->update(img, bb); // KcfTracker->reinit(cv::Mat, cv::Rect)
 
             // If the tracking has been lost or the bounding box is out of limits.
             if (!targetOnFrame)
@@ -258,7 +266,7 @@ void FaceDetectionTracker::track()
 
 #ifdef DEBUG // Enable/Disable in the header.
         cv::Mat out_img;
-        cv::cvtColor(img, out_img, CV_BGR2GRAY);// Convert to gray scale
+        cv::cvtColor(m_cvPtr->image, out_img, CV_BGR2GRAY);// Convert to gray scale
         cv::cvtColor(out_img, out_img, CV_GRAY2BGR); //Convert from 1 color channel to 3 (trick)
 
         //Draw a rectangle on the out_img using the tracked bounding box.

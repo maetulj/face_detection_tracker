@@ -131,6 +131,15 @@ private:
      */
     void imageCallback(const sensor_msgs::ImageConstPtr &msg);
 
+    // Point in the upper left corner.
+    cv::Point m_p1;
+
+    // Point in the lower right corner.
+    cv::Point m_p2;
+
+    // Height and width of the bounding box.
+    int m_width;
+    int m_height;
 
     //////////////////////
     /// Tracking part. ///
