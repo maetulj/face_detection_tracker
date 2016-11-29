@@ -93,7 +93,7 @@ private:
     ros::NodeHandle m_node;
 
     std::string m_windowName{"Face detection"};
-    std::string m_directory{"/home/maetulj/tiago_ws/src/face_detection/"};
+    std::string m_directory{"/home/maetulj/tiago_ws/src/face_detection_tracker/"};
 
     // Buffer for publishers, subscibers.
     int m_queuesize = 2;
