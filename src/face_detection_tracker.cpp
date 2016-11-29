@@ -199,7 +199,7 @@ void FaceDetectionTracker::track()
         {
             ROS_INFO("New bounding box!");
             // Create new tracker!
-            cKCF = new cf_tracking::KcfTracker(paras);
+            cKCF = new cf_tracking::KcfTracker(m_paras);
 
             // Save the incoming bounding box to a private member.
             bb.x = m_inBb.x;
