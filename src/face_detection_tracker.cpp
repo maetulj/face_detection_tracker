@@ -122,10 +122,10 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         // cv::Point center(faces[i].x + faces[i].width * 0.5, faces[i].y + faces[i].height * 0.5);
 
         // Point in the upper left corner.
-        m_p1(faces[i].x, faces[i].y);
+        m_p1 = cv::Point(faces[i].x, faces[i].y);
 
         // Point in the lower right corner.
-        m_p2(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
+        m_p2 = cv::Point(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
 
         m_width = faces[i].width;
         m_height = faces[i].height;
