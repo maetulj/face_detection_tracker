@@ -41,9 +41,9 @@ FaceDetectionTracker::FaceDetectionTracker() :
     /// Tracker part. ///
     /////////////////////
 
-    rgbimgSub = m_node.subscribe<sensor_msgs::Image>("kinect2/qhd/image_color_rect", m_queuesize, &TrackerNode::callbackimage, this);
+    rgbimgSub = m_node.subscribe<sensor_msgs::Image>("kinect2/qhd/image_color_rect", m_queuesize, &FaceDetectionTracker::callbackimage, this);
 
-    bbSub = m_node.subscribe<perception_msgs::Rect>("face_detection/bb", m_queuesize, &TrackerNode::callbackbb, this);
+    bbSub = m_node.subscribe<perception_msgs::Rect>("face_detection/bb", m_queuesize, &FaceDetectionTracker::callbackbb, this);
 
     bbPub = m_node.advertise<perception_msgs::Rect>("tracker/bb", m_queuesize);
 
