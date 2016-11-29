@@ -97,6 +97,9 @@ void FaceDetectionTracker::imageCallback(const sensor_msgs::ImageConstPtr &msg)
 
     // Output modified video stream.
     // m_imagePub.publish(m_cvPtr->toImageMsg());
+    //
+    // Signal new image.
+    m_newImage_static = true;
 }
 
 /**
@@ -114,7 +117,9 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
 
     // Detect faces.
     m_frontalfaceCascade.detectMultiScale(frameGray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
-    m_profilefaceCascade.detectMultiScale(frameGray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
+
+    // Problems with profile face?
+    // m_profilefaceCascade.detectMultiScale(frameGray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
 
     for( size_t i = 0; i < faces.size(); i++ )
     {
