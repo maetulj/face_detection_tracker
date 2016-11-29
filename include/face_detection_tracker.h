@@ -49,7 +49,7 @@
 
 // Debug defines.
 // Include this if you want to have visual output.
-// #define DEBUG
+#define DEBUG
 
 
 using namespace cv;
