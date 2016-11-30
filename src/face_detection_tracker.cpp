@@ -140,11 +140,8 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         cv::ellipse(frame, center, Size( faces[i].width * 0.5, faces[i].height * 0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
         */
 
-        // Copy frame to local variable to not mingle with the tracking part.
-        cv::Mat localFrame = frame;
-
         // Draw the rectangle on the frame.
-        cv::rectangle(localFrame, m_p1, m_p2, Scalar(0, 0, 255), 4, 8, 0);
+        cv::rectangle(frame, m_p1, m_p2, Scalar(0, 0, 255), 4, 8, 0);
 
         // Create the header.
         m_msgRect.header = m_cvPtr->header;
