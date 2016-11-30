@@ -141,7 +141,7 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         */
 
         // Draw the rectangle on the frame.
-        // cv::rectangle(frame, m_p1, m_p2, Scalar(0, 0, 255), 4, 8, 0);
+        cv::rectangle(frame, m_p1, m_p2, Scalar(0, 0, 255), 4, 8, 0);
 
         // Create the header.
         m_msgRect.header = m_cvPtr->header;
