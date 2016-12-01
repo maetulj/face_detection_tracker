@@ -187,6 +187,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
+  include
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
   ${CF_TCLAP_DIR}
@@ -196,7 +197,6 @@ include_directories(
   cf_libs/kcf
   cf_libs/dsst
   cf_libs/common
-  include
   ${roscpp_INCLUDE_DIRS}
 )
 
