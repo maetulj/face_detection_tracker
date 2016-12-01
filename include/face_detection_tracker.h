@@ -84,6 +84,14 @@ public:
      */
     void track();
 
+    void readCSV(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';');
+
+    void readCSVLegend(const string& filename, char separator = ';');
+
+    void trainDetector();
+
+    void recognizeFace();
+
 private:
     // Global variables.
     static bool m_newImage_static;
@@ -101,6 +109,8 @@ private:
     ////////////////////////////
     /// Face detection part. ///
     ////////////////////////////
+
+    std::vector<int> m_faces;
 
     // Helper member variables for image transformation.
     image_transport::ImageTransport m_it;
@@ -194,6 +204,14 @@ private:
      * @param[in]  _bb   Bounding box.
      */
     void callbackbb(const perception_msgs::RectConstPtr &_bb);
+
+    /////////////////////////
+    /// Recognition part. ///
+    /////////////////////////
+
+    int m_trackedPerson;
+    int m_trackedPersonId;
+
 };
 
 #endif // FACE_DETECTION_TRACKER_H
