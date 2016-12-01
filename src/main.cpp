@@ -31,8 +31,6 @@ int main(int argc, char** argv)
     /** @face_detection_tracker */
     FaceDetectionTracker fd;
 
-    fd.trainDetector();
-
     ROS_INFO("initialized the class");
 
     while (ros::ok())

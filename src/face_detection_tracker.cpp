@@ -1,4 +1,4 @@
-#include <face_detection_tracker.h>
+#include "face_detection_tracker.h"
 #include <sensor_msgs/JointState.h>
 
 // Initialize static members.
@@ -8,9 +8,8 @@ bool FaceDetectionTracker::m_newBB_static = false;
 /**
  * @brief      Constructor for the class.
  */
-FaceDetectionTracker::FaceDetectionTracker()
- : m_it(m_node)
- , m_trackedPerson(-1)
+FaceDetectionTracker::FaceDetectionTracker() :
+        m_it(m_node)
 {
     ///////////////////////
     /// Detection part. ///
@@ -111,30 +110,31 @@ void FaceDetectionTracker::imageCallback(const sensor_msgs::ImageConstPtr &msg)
  */
 void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
 {
+    std::vector<Rect> faces;
     Mat frameGray;
 
     cv::cvtColor(frame, frameGray, CV_BGR2GRAY);
     cv::equalizeHist(frameGray, frameGray);
 
     // Detect faces.
-    m_frontalfaceCascade.detectMultiScale(frameGray, m_faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
+    m_frontalfaceCascade.detectMultiScale(frameGray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
 
     // Problems with profile face?
     // m_profilefaceCascade.detectMultiScale(frameGray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
 
-    for( size_t i = 0; i < m_faces.size(); i++ )
+    for( size_t i = 0; i < faces.size(); i++ )
     {
         // Center point
         // cv::Point center(faces[i].x + faces[i].width * 0.5, faces[i].y + faces[i].height * 0.5);
 
         // Point in the upper left corner.
-        m_p1 = cv::Point(m_faces[i].x, m_faces[i].y);
+        m_p1 = cv::Point(faces[i].x, faces[i].y);
 
         // Point in the lower right corner.
-        m_p2 = cv::Point(m_faces[i].x + m_faces[i].width, m_faces[i].y + m_faces[i].height);
+        m_p2 = cv::Point(faces[i].x + faces[i].width, faces[i].y + faces[i].height);
 
-        m_width = m_faces[i].width;
-        m_height = m_faces[i].height;
+        m_width = faces[i].width;
+        m_height = faces[i].height;
 
         /*
         cv::ellipse(frame, center, Size( faces[i].width * 0.5, faces[i].height * 0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
@@ -146,19 +146,16 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         // Create the header.
         m_msgRect.header = m_cvPtr->header;
         m_msgRect.id = i;
-        m_msgRect.x = m_faces[i].x;
-        m_msgRect.y = m_faces[i].y;
-        m_msgRect.height = m_faces[i].height;
-        m_msgRect.width = m_faces[i].width;
+        m_msgRect.x = faces[i].x;
+        m_msgRect.y = faces[i].y;
+        m_msgRect.height = faces[i].height;
+        m_msgRect.width = faces[i].width;
 
         // Output perception_msgs.
         m_perceptPub.publish(m_msgRect);
 
         // Signal a new bounding box.
         m_newBB_static = true;
-
-    // Recognize the faces.
-    recognizeFace();
 
 #ifdef DEBUG // Enable/Disable in the header.
         // Visualize the image with the frame.
@@ -207,7 +204,9 @@ void FaceDetectionTracker::track()
     // If we have a new image.
     if (m_newImage_static)
     {
-        // Resize the image done in detecting part.
+        // Resize the image.
+        // Done in detecting part.
+        // cv::resize(m_cvPtr->image, img, cv::Size(m_cvPtr->image.cols / 2, m_cvPtr->image.rows / 2));
 
         // If new bounding box arrived (detected face) && we are not yet tracking anything.
         if (m_newBB_static && !tracking)
@@ -280,19 +279,15 @@ void FaceDetectionTracker::track()
         if (targetOnFrame)
         {
             cv::rectangle(out_img, cv::Point(bb.x, bb.y), cv::Point(bb.x + bb.width, bb.y + bb.height), cv::Scalar(255, 255, 255));
+        }
 
-            if (m_trackedPerson != -1)
-            {
-                // Create the text we will annotate the box with:
-                // std::string box_text = format("Prediction = %d", prediction);
-                // Calculate the position for annotated text (make sure we don't
-                // put illegal values in there):
-                int pos_x = std::max(m_faces[m_trackedPersonId].tl().x - 10, 0);
-                int pos_y = std::max(m_faces[m_trackedPersonId].tl().y + m_faces[m_trackedPersonId].height + 10, 0);
+        //Draw a circle on the center of the bounding box.
+        if (targetOnFrame)
+        {
+            int centerX = bb.x + (bb.width / 2);
+            int centerY = bb.y + (bb.height / 2);
 
-                // Display the information about the tracked person.
-                cv::putText(out_img, m_labelLegend[m_trackedPerson], Point(pos_x, pos_y), CV_AA, 0.5, CV_RGB(255,0,0), 2.0);
-            }
+            cv::circle(out_img, cv::Point(centerX, centerY), 2, cv::Scalar(0, 0, 255));
         }
 
         cv::imshow("Tracked object", out_img);
@@ -303,154 +298,4 @@ void FaceDetectionTracker::track()
         m_newImage_static = false;
         m_newBB_static = false;
     } //end if new image
-}
-
-void FaceDetectionTracker::readCSV(const string& filename, vector<Mat>& images, vector<int>& labels, char separator)
-{
-    std::ifstream file(filename.c_str(), std::ifstream::in);
-
-    if (!file)
-    {
-        std::string error_message = "No valid input file was given, please check the given filename.";
-        CV_Error(CV_StsBadArg, error_message);
-    }
-
-    std::string line, path, classlabel;
-
-    while (getline(file, line))
-    {
-        std::stringstream liness(line);
-        getline(liness, path, separator);
-        getline(liness, classlabel);
-
-        if (!path.empty() && !classlabel.empty())
-        {
-            images.push_back(cv::imread(path, 0));
-            labels.push_back(atoi(classlabel.c_str()));
-        }
-    }
-}
-
-void FaceDetectionTracker::readCSVLegend(const string& filename, char separator)
-{
-    std::ifstream file(filename.c_str(), std::ifstream::in);
-
-    if (!file)
-    {
-        std::string error_message = "No valid input file was given, please check the given filename.";
-        CV_Error(CV_StsBadArg, error_message);
-    }
-
-    std::string line, name, classlabel;
-
-    while (getline(file, line))
-    {
-        std::stringstream liness(line);
-        getline(liness, classlabel, separator);
-        getline(liness, name);
-
-        if (!name.empty() && !classlabel.empty())
-        {
-            int label = atoi(classlabel.c_str());
-            m_labelLegend.insert(std::pair<int, std::string>(label, name));
-        }
-    }
-}
-
-void FaceDetectionTracker::trainDetector()
-{
-    std::string fn_csv = "/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_images.csv";
-
-    // Legend.
-    std::string legend_csv = "/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_legend.csv";
-
-    // Read in the data (fails if no valid input filename is given, but you'll get an error message):
-    try
-    {
-        readCSV(fn_csv, m_images, m_labels);
-
-        readCSVLegend(legend_csv);
-    }
-    catch (cv::Exception& e)
-    {
-        std::cerr << "Error opening file \"" << fn_csv << "\". Reason: " << e.msg << std::endl;
-        // nothing more we can do
-        exit(1);
-    }
-
-    // Get the height from the first image. We'll need this
-    // later in code to reshape the images to their original
-    // size AND we need to reshape incoming faces to this size:
-    m_imWidth = m_images[0].cols;
-    m_imHeight = m_images[0].rows;
-    // Create a FaceRecognizer and train it on the given images:
-    m_model = cv::createFisherFaceRecognizer();
-    m_model->train(m_images, m_labels);
-
-    ROS_INFO("The face has been remembered :)");
-}
-
-void FaceDetectionTracker::recognizeFace()
-{
-    // Clone the current frame:
-    cv::Mat original = m_cvPtr->image;
-
-    if (m_newBB_static)
-    {
-        Mat gray;
-        cv::cvtColor(original, gray, CV_BGR2GRAY);
-
-        for (int i = 0; i < m_faces.size(); i++)
-        {
-            // Process face by face:
-            cv::Rect face_i = m_faces[i];
-
-            // Crop the face from the image. So simple with OpenCV C++:
-            cv::Mat face = gray(face_i);
-
-            // Resizing the face is necessary for Eigenfaces and Fisherfaces. You can easily
-            // verify this, by reading through the face recognition tutorial coming with OpenCV.
-            // Resizing IS NOT NEEDED for Local Binary Patterns Histograms, so preparing the
-            // input data really depends on the algorithm used.
-            //
-            // I strongly encourage you to play around with the algorithms. See which work best
-            // in your scenario, LBPH should always be a contender for robust face recognition.
-            //
-            // Since I am showing the Fisherfaces algorithm here, I also show how to resize the
-            // face you have just found:
-            cv::Mat face_resized;
-
-            cv::resize(face, face_resized, Size(m_imWidth, m_imHeight), 1.0, 1.0, INTER_CUBIC);
-
-            // Now perform the prediction, see how easy that is:
-            int prediction = -1;
-            prediction = m_model->predict(face_resized);
-
-            if (prediction != -1)
-            {
-                m_trackedPersonId = i;
-                m_trackedPerson = prediction;
-            }
-
-            // And finally write all we've found out to the original image!
-            // First of all draw a green rectangle around the detected face:
-            cv::rectangle(original, face_i, CV_RGB(0, 255,0), 1);
-            // Create the text we will annotate the box with:
-            // std::string box_text = format("Prediction = %d", prediction);
-            // Calculate the position for annotated text (make sure we don't
-            // put illegal values in there):
-            // int pos_x = std::max(face_i.tl().x - 10, 0);
-            // int pos_y = std::max(face_i.tl().y + face_i.height + 10, 0);
-            // And now put it into the image:
-            // putText(original, m_labelLegend[prediction], Point(pos_x, pos_y), CV_AA, 0.5, CV_RGB(255,0,0), 2.0);
-        }
-    }
-
-#ifdef DEBUG
-    // Show the result:
-    imshow("face_recognizer", original);
-    // And display it:
-    char key = (char) waitKey(20);
-#endif
-
 }

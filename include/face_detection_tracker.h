@@ -25,7 +25,6 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <map>
 
 // ROS related includes.
 #include <ros/ros.h>
@@ -36,13 +35,9 @@
 
 // OpenCV related includes.
 #include <cv_bridge/cv_bridge.h>
-
-#include <opencv2/contrib/contrib.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/objdetect/objdetect.hpp>
-
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 // Third party includes for tracking.
 #include "../cf_libs/kcf/kcf_tracker.hpp"
@@ -51,7 +46,6 @@
 // Self defined includes.
 #include <perception_msgs/Rect.h>
 
-#include <faces_storage.hpp>
 
 // Debug defines.
 // Include this if you want to have visual output.
@@ -89,20 +83,6 @@ public:
      * @brief      Track the object.
      */
     void track();
-
-    void readCSV(const string& filename, vector<Mat>& images, vector<int>& labels, char separator = ';');
-
-    void readCSVLegend(const string& filename, char separator = ';');
-
-    /**
-     * @brief       Train the face detector.
-     */
-    void trainDetector();
-
-    /**
-     * @brief       Recognize the faces on the video.
-     */
-    void recognizeFace();
 
 private:
     // Global variables.
@@ -150,14 +130,6 @@ private:
      * @param[in]  msg   The image in a form of a sensor_msgs::Image.
      */
     void imageCallback(const sensor_msgs::ImageConstPtr &msg);
-
-    // Detected faces.
-
-    std::vector<Rect> m_faces;
-
-    // TO BE IMPLEMENTED!
-    // Save detected faces in a storage class.
-    // std::vector<FacesStorage> m_storeFaces;
 
     // Point in the upper left corner.
     cv::Point m_p1;
@@ -222,27 +194,6 @@ private:
      * @param[in]  _bb   Bounding box.
      */
     void callbackbb(const perception_msgs::RectConstPtr &_bb);
-
-    /////////////////////////
-    /// Recognizing part. ///
-    /////////////////////////
-
-    // These vectors hold the images and corresponding labels:
-    vector<Mat> m_images;
-    vector<int> m_labels;
-
-    // Hold the legend for labels.
-    std::map<int, std::string> m_labelLegend;
-
-    int m_imWidth;
-    int m_imHeight;
-
-    Ptr<FaceRecognizer> m_model;
-
-    // The tracked person label.
-    int m_trackedPersonId;
-    int m_trackedPerson;
-
 };
 
 #endif // FACE_DETECTION_TRACKER_H
