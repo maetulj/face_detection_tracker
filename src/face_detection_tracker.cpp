@@ -156,16 +156,16 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
 
         // Signal a new bounding box.
         m_newBB_static = true;
-    }
 
     // Recognize the faces.
     recognizeFace();
 
 #ifdef DEBUG // Enable/Disable in the header.
         // Visualize the image with the frame.
-        cv::imshow(m_windowName, frameGray);
+        cv::imshow( m_windowName, m_cvPtr->image );
         cv::waitKey(3);
 #endif
+    }
 }
 
 /////////////////////
