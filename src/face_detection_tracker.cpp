@@ -380,6 +380,11 @@ void FaceDetectionTracker::readCSVLegend(const string& filename, char separator)
 
 void FaceDetectionTracker::trainDetector()
 {
+    if (m_train)
+    {
+        return;
+    }
+
     std::string fn_csv = "/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_images.csv";
 
     // Legend.
