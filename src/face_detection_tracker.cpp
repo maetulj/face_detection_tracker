@@ -5,6 +5,13 @@
 bool FaceDetectionTracker::m_newImage_static = false;
 bool FaceDetectionTracker::m_newBB_static = false;
 
+int FaceDetectionTracker::m_faceHeight = 0;
+int FaceDetectionTracker::m_faceWidth = 0;
+
+int FaceDetectionTracker::m_faceCounter = 0;
+
+int FaceDetectionTracker::m_personId = 0;
+
 /**
  * @brief      Constructor for the class.
  */
@@ -152,13 +159,20 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         m_msgRect.x = m_faces[i].x;
         m_msgRect.y = m_faces[i].y;
         m_msgRect.height = m_faces[i].height;
-        m_msgRect.width = m_faces[i].width;
+        m_msgRect.width = m_faces[i].height;
 
         // Output perception_msgs.
         m_perceptPub.publish(m_msgRect);
 
         // Signal a new bounding box.
         m_newBB_static = true;
+
+        if (train)
+        {
+            m_personId = i;
+
+            saveFaceAsJPG(frame, m_p1, m_width, m_height);
+        }
     }
 
     // Recognize the faces.
@@ -456,4 +470,42 @@ void FaceDetectionTracker::recognizeFace()
     char key = (char) waitKey(20);
 #endif
 
+}
+
+/**
+ * @brief      Save face as a separate jpg image.
+ */
+void FaceDetectionTracker::saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height, int width)
+{
+    // Calculate second point based on the saved information.
+    if (m_faceHeight && m_faceWidth)
+    {
+        height = m_faceHeight;
+        width = m_faceWidth;
+    }
+    else if (!m_faceHeight && !m_faceWidth)
+    {
+        m_faceHeight = height;
+        m_faceWidth = width;
+    }
+
+    // Second point.
+    cv::Point p2(p1.x + width, p1.y + height);
+
+    // Get the rectangle.
+    cv::Rect face(p1, p2);
+
+    // Crop the face from the image.
+    cv::Mat faceImg = cv::gray(face);
+
+    // If we did not yet do 100 images.
+    if (m_faceCounter < 100)
+    {
+        std::string imgId = std::to_string(m_faceCounter);
+        std::string personId = std::to_string(m_personId);
+
+        cv::imwrite("../face_images/images/person_" + personId + "_" + imgId + ".jpg", faceImg);
+
+        m_faceCounter++;
+    }
 }

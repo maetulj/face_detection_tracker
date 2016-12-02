@@ -104,10 +104,26 @@ public:
      */
     void recognizeFace();
 
+    /**
+     * @brief      Save face as a separate jpg image.
+     */
+    void saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height, int width)
+
 private:
     // Global variables.
     static bool m_newImage_static;
     static bool m_newBB_static;
+
+    // Storage for face width and height.
+    // The images for Fischer recognition have to be the same size.
+    static int m_faceHeight;
+    static int m_faceWidth;
+
+    // Face counter.
+    static int m_faceCounter;
+
+    // Person id.
+    static int m_personId;
 
     // The ros node handle.
     ros::NodeHandle m_node;
@@ -227,6 +243,9 @@ private:
     /// Recognizing part. ///
     /////////////////////////
 
+    // Define if training or recognizing.
+    int m_train;
+
     // These vectors hold the images and corresponding labels:
     vector<Mat> m_images;
     vector<int> m_labels;
@@ -242,7 +261,6 @@ private:
     // The tracked person label.
     int m_trackedPersonId;
     int m_trackedPerson;
-
 };
 
 #endif // FACE_DETECTION_TRACKER_H
