@@ -27,7 +27,8 @@ FaceDetectionTracker::FaceDetectionTracker(bool train, int faceId)
     ///////////////////////
 
     // Subscribe to input video feed and publish output video feed.
-    m_imageSub = m_it.subscribe("/kinect2/qhd/image_color_rect", 1, &FaceDetectionTracker::imageCallback, this);
+    m_kinSub = m_it.subscribe("/kinect2/qhd/image_color_rect", 1, &FaceDetectionTracker::imageCallback, this);
+    m_imageSub = m_it.subscribe("/pseye_camera/image_raw", 1, &FaceDetectionTracker::imageCallback, this);
 
     // Advertise the rectangle with information about the detected face.
     m_perceptPub = m_node.advertise<perception_msgs::Rect>("/face_detection/bb", 1);
@@ -45,6 +46,26 @@ FaceDetectionTracker::FaceDetectionTracker(bool train, int faceId)
     {
         ROS_ERROR("Error loading profile face cascade!");
         return;
+    }
+
+    // Saved faces.
+    std::string fn_csv = PATH + "face_images/face_images.csv";
+
+    // Legend.
+    std::string legend_csv = PATH + "face_images/face_legend.csv";
+
+     // Read in the data (fails if no valid input filename is given, but you'll get an error message):
+    try
+    {
+        readCSV(fn_csv, m_images, m_labels);
+
+        readCSVLegend(legend_csv);
+    }
+    catch (cv::Exception& e)
+    {
+        std::cerr << "Error opening file \"" << fn_csv << "\". Reason: " << e.msg << std::endl;
+        // nothing more we can do
+        exit(1);
     }
 
 
@@ -65,6 +86,8 @@ FaceDetectionTracker::FaceDetectionTracker(bool train, int faceId)
 
 
     m_personId = faceId;
+
+    m_model = cv::createFisherFaceRecognizer();
 }
 
 /**
@@ -130,7 +153,7 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
     cv::equalizeHist(frameGray, frameGray);
 
     // Detect faces.
-    m_frontalfaceCascade.detectMultiScale(frameGray, m_faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
+    m_frontalfaceCascade.detectMultiScale(frameGray, m_faces, 1.3, 3, 0);
 
     // Problems with profile face?
     // m_profilefaceCascade.detectMultiScale(frameGray, faces, 1.1, 2, 0 | CV_HAAR_SCALE_IMAGE, Size(30, 30));
@@ -144,10 +167,11 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         m_p1 = cv::Point(m_faces[i].x, m_faces[i].y);
 
         // Point in the lower right corner.
-        m_p2 = cv::Point(m_faces[i].x + m_faces[i].width, m_faces[i].y + m_faces[i].height);
+        // m_p2 = cv::Point(m_faces[i].x + m_faces[i].width, m_faces[i].y + m_faces[i].height);
+        m_p2 = cv::Point(m_faces[i].x + WIDTH, m_faces[i].y +HEIGHT);
 
-        m_width = m_faces[i].width;
-        m_height = m_faces[i].height;
+        m_width = WIDTH; // m_faces[i].width;
+        m_height = HEIGHT; // m_faces[i].height;
 
         /*
         cv::ellipse(frame, center, Size( faces[i].width * 0.5, faces[i].height * 0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
@@ -391,32 +415,7 @@ void FaceDetectionTracker::trainDetector()
         return;
     }
 
-    std::string fn_csv = PATH + "face_images/face_images.csv";
-
-    // Legend.
-    std::string legend_csv = PATH + "face_images/face_legend.csv";
-
-    // Read in the data (fails if no valid input filename is given, but you'll get an error message):
-    try
-    {
-        readCSV(fn_csv, m_images, m_labels);
-
-        readCSVLegend(legend_csv);
-    }
-    catch (cv::Exception& e)
-    {
-        std::cerr << "Error opening file \"" << fn_csv << "\". Reason: " << e.msg << std::endl;
-        // nothing more we can do
-        exit(1);
-    }
-
-    // Get the height from the first image. We'll need this
-    // later in code to reshape the images to their original
-    // size AND we need to reshape incoming faces to this size:
-    m_imWidth = m_images[0].cols;
-    m_imHeight = m_images[0].rows;
     // Create a FaceRecognizer and train it on the given images:
-    m_model = cv::createFisherFaceRecognizer();
     m_model->train(m_images, m_labels);
 
     m_model->save(PATH + "face_images/fischer_faces.yml");
@@ -439,27 +438,15 @@ void FaceDetectionTracker::recognizeFace()
             // Process face by face:
             cv::Rect face_i = m_faces[i];
 
-            // Crop the face from the image. So simple with OpenCV C++:
+            // Crop the face from the image.
             cv::Mat face = gray(face_i);
-
-            // Resizing the face is necessary for Eigenfaces and Fisherfaces. You can easily
-            // verify this, by reading through the face recognition tutorial coming with OpenCV.
-            // Resizing IS NOT NEEDED for Local Binary Patterns Histograms, so preparing the
-            // input data really depends on the algorithm used.
-            //
-            // I strongly encourage you to play around with the algorithms. See which work best
-            // in your scenario, LBPH should always be a contender for robust face recognition.
-            //
-            // Since I am showing the Fisherfaces algorithm here, I also show how to resize the
-            // face you have just found:
             cv::Mat face_resized;
 
-            cv::resize(face, face_resized, Size(WIDTH, HEIGHT), 1.0, 1.0, INTER_CUBIC);
+            cv::resize(face, face_resized, cv::Size(WIDTH, HEIGHT), 1.0, 1.0, INTER_CUBIC);
 
             // Now perform the prediction, see how easy that is:
             int prediction = -1;
 
-            m_model = cv::createFisherFaceRecognizer();
             // Load the model.
             m_model->load(PATH + "face_images/fischer_faces.yml");
 
@@ -472,18 +459,6 @@ void FaceDetectionTracker::recognizeFace()
             }
 
             std::cout << m_trackedPerson << std::endl;
-
-            // And finally write all we've found out to the original image!
-            // First of all draw a green rectangle around the detected face:
-            cv::rectangle(original, face_i, CV_RGB(0, 255,0), 1);
-            // Create the text we will annotate the box with:
-            // std::string box_text = format("Prediction = %d", prediction);
-            // Calculate the position for annotated text (make sure we don't
-            // put illegal values in there):
-            // int pos_x = std::max(face_i.tl().x - 10, 0);
-            // int pos_y = std::max(face_i.tl().y + face_i.height + 10, 0);
-            // And now put it into the image:
-            // putText(original, m_labelLegend[prediction], Point(pos_x, pos_y), CV_AA, 0.5, CV_RGB(255,0,0), 2.0);
         }
     }
 #ifdef DEBUG
@@ -494,6 +469,7 @@ void FaceDetectionTracker::recognizeFace()
 #endif
 
 }
+
 
 /**
  * @brief      Save face as a separate jpg image.

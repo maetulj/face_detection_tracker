@@ -64,8 +64,8 @@ using namespace cv;
 
 const std::string PATH = "/home/maetulj/tiago_ws/src/face_detection_tracker/";
 
-const int HEIGHT = 48;
-const int WIDTH = 48;
+const int HEIGHT = 64;
+const int WIDTH = 64;
 
 const int FRAMESRECORDED = 50;
 
@@ -151,6 +151,7 @@ private:
 
     // Helper member variables for image transformation.
     image_transport::ImageTransport m_it;
+    image_transport::Subscriber m_kinSub;
     image_transport::Subscriber m_imageSub;
     image_transport::Publisher m_imagePub;
 
