@@ -12,14 +12,13 @@ int FaceDetectionTracker::m_faceCounter = 0;
 
 int FaceDetectionTracker::m_personId = 0;
 
-bool FaceDetectionTracker::m_train = false;
-
 /**
  * @brief      Constructor for the class.
  */
 FaceDetectionTracker::FaceDetectionTracker()
  : m_it(m_node)
  , m_trackedPerson(-1)
+ , m_train(false)
 {
     ///////////////////////
     /// Detection part. ///
@@ -30,6 +29,9 @@ FaceDetectionTracker::FaceDetectionTracker()
 
     // Advertise the rectangle with information about the detected face.
     m_perceptPub = m_node.advertise<perception_msgs::Rect>("/face_detection/bb", 1);
+
+    // Callback function for dynamic reconfigure server.
+    void configCallback(node_example::node_example_paramsConfig &config, uint32_t level);
 
     // Load the cascades.
     // // Frontal face.
