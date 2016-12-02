@@ -1,14 +1,21 @@
 ROS Package for detecting, tracking and recognizing faces.
-It depends greatly on the teaching faces.
+Final result depends greatly on the teaching process.
+
+**************
+** TEACHING **
+**************
 
 To teach from video:
+
+**IMPORTANT!!**
+Before starting teaching be sure to delete (or empty) the file "face_images/face_images.csv"
+**IMPORTANT!!**
+
 - start the program with:
         rosrun face_detection_tracker face_detection tracker
 
 - the program asks if you want to start teaching or not. To teach write:
         yes
-
-- IMPORTANT!! Before starting teaching be sure to delete (or empty) the file "face_images/face_images.csv"
 
 - the program now waits either for "/kinect2/qhd/image_color_rect" or "/pseye_camera/image_raw"
   and then learns from the topic (first 50 frames with detected face)
@@ -30,9 +37,14 @@ To teach from video:
 
 To have the best results have good videos (face not to far away)
 
+*************
+** TESTING **
+*************
 
 To run the program:
-- IMPORTANT!! You have to have "face_images/face_legend.csv", "face_images/face_images.csv" and "face_images/fischer_faces.yml" files
+**IMPORTANT!!**
+You have to have "face_images/face_legend.csv", "face_images/face_images.csv" and "face_images/fischer_faces.yml" files
+**IMPORTANT!!**
 
 - start the program with:
         rosrun face_detection_tracker face_detection tracker
