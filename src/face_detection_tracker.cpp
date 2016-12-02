@@ -486,6 +486,9 @@ void FaceDetectionTracker::recognizeFace()
  */
 void FaceDetectionTracker::saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height, int width)
 {
+    // Csv file to write image info.
+    ofstream imagesCSV("/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_images.csv");
+
     // Calculate second point based on the saved information.
     if (m_faceHeight && m_faceWidth)
     {
@@ -515,8 +518,12 @@ void FaceDetectionTracker::saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height
 
         cv::imwrite("/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/images/person_" + personId + "_" + imgId + ".jpg", faceImg);
 
+        imagesCSV << "/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/images/person_" + personId + "_" + imgId + ".jpg;" + personId << std::endl;
+
         ROS_INFO("Saved the image.");
 
         m_faceCounter++;
     }
+
+    imagesCSV.close();
 }
