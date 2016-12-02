@@ -173,6 +173,10 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         m_width = WIDTH; // m_faces[i].width;
         m_height = HEIGHT; // m_faces[i].height;
 
+        FacesStorage faceStorage(i, m_p1, m_p2, WIDTH, HEIGHT);
+
+        m_facesDetected.insert(std::pair<int, FacesStorage>(i, faceStorage));
+
         /*
         cv::ellipse(frame, center, Size( faces[i].width * 0.5, faces[i].height * 0.5), 0, 0, 360, Scalar(255, 0, 255), 4, 8, 0);
         */
@@ -435,30 +439,38 @@ void FaceDetectionTracker::recognizeFace()
 
         for (int i = 0; i < m_faces.size(); i++)
         {
-            // Process face by face:
-            cv::Rect face_i = m_faces[i];
+            // Get the stored face.
+            auto faceIt = m_facesDetected.find(i);
 
-            // Crop the face from the image.
-            cv::Mat face = gray(face_i);
-            cv::Mat face_resized;
-
-            cv::resize(face, face_resized, cv::Size(WIDTH, HEIGHT), 1.0, 1.0, INTER_CUBIC);
-
-            // Now perform the prediction, see how easy that is:
-            int prediction = -1;
-
-            // Load the model.
-            m_model->load(PATH + "face_images/fischer_faces.yml");
-
-            prediction = m_model->predict(face_resized);
-
-            if (prediction != -1)
+            if (faceIt != m_facesDetected.end())
             {
-                m_trackedPersonId = i;
-                m_trackedPerson = prediction;
-            }
+                cv::Point p1 = faceIt->second.m1;
+                cv::Point p2 = faceIt->second.m2;
 
-            std::cout << m_trackedPerson << std::endl;
+                cv::Rect face_i(p1, p2);// = m_faces[i];
+
+                // Crop the face from the image.
+                cv::Mat face = gray(face_i);
+                cv::Mat face_resized;
+
+                cv::resize(face, face_resized, cv::Size(WIDTH, HEIGHT), 1.0, 1.0, INTER_CUBIC);
+
+                // Now perform the prediction, see how easy that is:
+                int prediction = -1;
+
+                // Load the model.
+                m_model->load(PATH + "face_images/fischer_faces.yml");
+
+                prediction = m_model->predict(face_resized);
+
+                if (prediction != -1)
+                {
+                    m_trackedPersonId = i;
+                    m_trackedPerson = prediction;
+                }
+
+                std::cout << m_trackedPerson << std::endl;
+            }
         }
     }
 #ifdef DEBUG

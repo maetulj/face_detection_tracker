@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
     ROS_INFO("initialized the class");
 
-    std::cout << "Do you want to train? If yes write: train" << std::endl;
+    std::cout << "Do you want to train? yes/no" << std::endl;
 
     std::string train;
 
@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
     std::cout << std::endl;
 
-    if (train == "train")
+    if (train == "yes")
     {
         std::cout << "Input id of the face to learn: ";
 
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     {
         ros::spinOnce();
 
-        if (train != "train")
+        if (train != "yes")
         {
 
 

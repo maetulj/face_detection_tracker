@@ -183,6 +183,8 @@ private:
 
     std::vector<Rect> m_faces;
 
+    std::map<int, FacesStorage> m_facesDetected;
+
     // TO BE IMPLEMENTED!
     // Save detected faces in a storage class.
     // std::vector<FacesStorage> m_storeFaces;
