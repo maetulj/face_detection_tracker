@@ -244,7 +244,7 @@ private:
     /////////////////////////
 
     // Define if training or recognizing.
-    int m_train;
+    bool m_train;
 
     // These vectors hold the images and corresponding labels:
     vector<Mat> m_images;

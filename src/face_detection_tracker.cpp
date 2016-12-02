@@ -12,6 +12,8 @@ int FaceDetectionTracker::m_faceCounter = 0;
 
 int FaceDetectionTracker::m_personId = 0;
 
+bool FaceDetectionTracker::m_train = false;
+
 /**
  * @brief      Constructor for the class.
  */
