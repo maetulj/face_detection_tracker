@@ -107,7 +107,7 @@ public:
     /**
      * @brief      Save face as a separate jpg image.
      */
-    void saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height, int width)
+    void saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height, int width);
 
 private:
     // Global variables.

@@ -167,7 +167,7 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         // Signal a new bounding box.
         m_newBB_static = true;
 
-        if (train)
+        if (m_train)
         {
             m_personId = i;
 
@@ -175,8 +175,12 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
         }
     }
 
-    // Recognize the faces.
-    recognizeFace();
+    if (!m_train)
+    {
+        // Recognize the faces.
+        recognizeFace();
+    }
+
 
 #ifdef DEBUG // Enable/Disable in the header.
     // Visualize the image with the frame.
@@ -496,7 +500,7 @@ void FaceDetectionTracker::saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height
     cv::Rect face(p1, p2);
 
     // Crop the face from the image.
-    cv::Mat faceImg = cv::gray(face);
+    cv::Mat faceImg = gray(face);
 
     // If we did not yet do 100 images.
     if (m_faceCounter < 100)
