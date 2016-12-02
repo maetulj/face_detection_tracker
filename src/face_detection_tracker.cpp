@@ -30,9 +30,6 @@ FaceDetectionTracker::FaceDetectionTracker()
     // Advertise the rectangle with information about the detected face.
     m_perceptPub = m_node.advertise<perception_msgs::Rect>("/face_detection/bb", 1);
 
-    // Callback function for dynamic reconfigure server.
-    void configCallback(node_example::node_example_paramsConfig &config, uint32_t level);
-
     // Load the cascades.
     // // Frontal face.
     if(!m_frontalfaceCascade.load(m_directory + m_frontalFaceCascadeName))
