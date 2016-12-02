@@ -513,7 +513,9 @@ void FaceDetectionTracker::saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height
         std::string imgId = std::to_string(m_faceCounter);
         std::string personId = std::to_string(m_personId);
 
-        cv::imwrite("../face_images/images/person_" + personId + "_" + imgId + ".jpg", faceImg);
+        cv::imwrite("/home/maetulj/tiago_ws/face_detection_tracker/face_images/images/person_" + personId + "_" + imgId + ".jpg", faceImg);
+
+        ROS_INFO("Saved the image.");
 
         m_faceCounter++;
     }
