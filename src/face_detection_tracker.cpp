@@ -500,7 +500,7 @@ void FaceDetectionTracker::saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height
     cv::Rect face(p1, p2);
 
     // Crop the face from the image.
-    cv::Mat faceImg = gray(face);
+    cv::Mat faceImg = frame(face);
 
     // If we did not yet do 100 images.
     if (m_faceCounter < 100)
