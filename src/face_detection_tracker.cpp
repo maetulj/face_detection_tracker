@@ -487,8 +487,7 @@ void FaceDetectionTracker::recognizeFace()
 void FaceDetectionTracker::saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height, int width)
 {
     // Csv file to write image info.
-    std::ofstream imagesCSV;
-    imagesCSV.open("/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_images.csv");
+    std::ofstream imagesCSV("/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_images.csv", std::ios_base::app);
 
     // Calculate second point based on the saved information.
     if (m_faceHeight && m_faceWidth)
