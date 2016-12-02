@@ -10,15 +10,17 @@ int FaceDetectionTracker::m_faceWidth = 0;
 
 int FaceDetectionTracker::m_faceCounter = 0;
 
-int FaceDetectionTracker::m_personId = 0;
+bool FaceDetectionTracker::savedImages = false;
+
+int FaceDetectionTracker::m_personId = -1;
 
 /**
  * @brief      Constructor for the class.
  */
-FaceDetectionTracker::FaceDetectionTracker()
+FaceDetectionTracker::FaceDetectionTracker(bool train, int faceId)
  : m_it(m_node)
  , m_trackedPerson(-1)
- , m_train(false)
+ , m_train(train)
 {
     ///////////////////////
     /// Detection part. ///
@@ -60,6 +62,9 @@ FaceDetectionTracker::FaceDetectionTracker()
     // paras.psrThreshold = 10; // lower more flexible
     m_paras.psrThreshold = 13.5; // higher more restricted to changes
     m_paras.psrPeakDel = 2; // 1;
+
+
+    m_personId = faceId;
 }
 
 /**
@@ -170,7 +175,7 @@ void FaceDetectionTracker::detectAndDisplay(cv::Mat frame)
 
         if (m_train)
         {
-            m_personId = i;
+            // m_personId = i;
 
             saveFaceAsJPG(frame, m_p1, m_width, m_height);
         }
@@ -381,15 +386,15 @@ void FaceDetectionTracker::readCSVLegend(const string& filename, char separator)
 
 void FaceDetectionTracker::trainDetector()
 {
-    if (m_train)
+    if (!m_train)
     {
         return;
     }
 
-    std::string fn_csv = "/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_images.csv";
+    std::string fn_csv = PATH + "face_images/face_images.csv";
 
     // Legend.
-    std::string legend_csv = "/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_legend.csv";
+    std::string legend_csv = PATH + "face_images/face_legend.csv";
 
     // Read in the data (fails if no valid input filename is given, but you'll get an error message):
     try
@@ -413,6 +418,8 @@ void FaceDetectionTracker::trainDetector()
     // Create a FaceRecognizer and train it on the given images:
     m_model = cv::createFisherFaceRecognizer();
     m_model->train(m_images, m_labels);
+
+    m_model->save(PATH + "face_images/fischer_faces.yml");
 
     ROS_INFO("The face has been remembered :)");
 }
@@ -447,10 +454,15 @@ void FaceDetectionTracker::recognizeFace()
             // face you have just found:
             cv::Mat face_resized;
 
-            cv::resize(face, face_resized, Size(m_imWidth, m_imHeight), 1.0, 1.0, INTER_CUBIC);
+            cv::resize(face, face_resized, Size(WIDTH, HEIGHT), 1.0, 1.0, INTER_CUBIC);
 
             // Now perform the prediction, see how easy that is:
             int prediction = -1;
+
+            m_model = cv::createFisherFaceRecognizer();
+            // Load the model.
+            m_model->load(PATH + "face_images/fischer_faces.yml");
+
             prediction = m_model->predict(face_resized);
 
             if (prediction != -1)
@@ -458,6 +470,8 @@ void FaceDetectionTracker::recognizeFace()
                 m_trackedPersonId = i;
                 m_trackedPerson = prediction;
             }
+
+            std::cout << m_trackedPerson << std::endl;
 
             // And finally write all we've found out to the original image!
             // First of all draw a green rectangle around the detected face:
@@ -472,7 +486,6 @@ void FaceDetectionTracker::recognizeFace()
             // putText(original, m_labelLegend[prediction], Point(pos_x, pos_y), CV_AA, 0.5, CV_RGB(255,0,0), 2.0);
         }
     }
-
 #ifdef DEBUG
     // Show the result:
     imshow("face_recognizer", original);
@@ -487,44 +500,54 @@ void FaceDetectionTracker::recognizeFace()
  */
 void FaceDetectionTracker::saveFaceAsJPG(cv::Mat frame, cv::Point p1, int height, int width)
 {
-    // Csv file to write image info.
-    std::ofstream imagesCSV("/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/face_images.csv", std::ios_base::app);
-
-    // Calculate second point based on the saved information.
-    if (m_faceHeight && m_faceWidth)
-    {
-        height = m_faceHeight;
-        width = m_faceWidth;
-    }
-    else if (!m_faceHeight && !m_faceWidth)
-    {
-        m_faceHeight = height;
-        m_faceWidth = width;
-    }
-
-    // Second point.
-    cv::Point p2(p1.x + width, p1.y + height);
-
-    // Get the rectangle.
-    cv::Rect face(p1, p2);
-
-    // Crop the face from the image.
-    cv::Mat faceImg = frame(face);
-
     // If we did not yet do 100 images.
-    if (m_faceCounter < 100)
+    if (m_faceCounter < FRAMESRECORDED)
     {
+        // Csv file to write image info.
+        std::ofstream imagesCSV(PATH + "face_images/face_images.csv", std::ios_base::app);
+
+        /*
+        // Calculate second point based on the saved information.
+        if (m_faceHeight && m_faceWidth)
+        {
+            height = m_faceHeight;
+            width = m_faceWidth;
+        }
+        else if (!m_faceHeight && !m_faceWidth)
+        {
+            m_faceHeight = height;
+            m_faceWidth = width;
+        }
+        */
+
+        // Second point.
+        cv::Point p2(p1.x + WIDTH, p1.y + HEIGHT);
+
+        // Get the rectangle.
+        cv::Rect face(p1, p2);
+
+        // Crop the face from the image.
+        cv::Mat faceImg = frame(face);
+
+
         std::string imgId = std::to_string(m_faceCounter);
         std::string personId = std::to_string(m_personId);
 
-        cv::imwrite("/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/images/person_" + personId + "_" + imgId + ".jpg", faceImg);
+        cv::imwrite(PATH + "face_images/images/person_" + personId + "_" + imgId + ".jpg", faceImg);
 
-        imagesCSV << "/home/maetulj/tiago_ws/src/face_detection_tracker/face_images/images/person_" + personId + "_" + imgId + ".jpg;" + personId << std::endl;
+        imagesCSV << PATH + "face_images/images/person_" + personId + "_" + imgId + ".jpg;" + personId << std::endl;
 
         ROS_INFO("Saved the image.");
 
-        m_faceCounter++;
+
+        imagesCSV.close();
+    }
+    else if (m_faceCounter == FRAMESRECORDED)
+    {
+        ROS_INFO("Training detector...");
+        trainDetector();
     }
 
-    imagesCSV.close();
+    m_faceCounter++;
+
 }

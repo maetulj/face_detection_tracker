@@ -29,18 +29,54 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "face_detection_tracker");
 
     /** @face_detection_tracker */
-    FaceDetectionTracker fd;
-
-    fd.trainDetector();
+    // FaceDetectionTracker fd;
+    std::shared_ptr<FaceDetectionTracker> fdPtr;
 
     ROS_INFO("initialized the class");
+
+    std::cout << "Do you want to train? If yes write: train" << std::endl;
+
+    std::string train;
+
+    std::cin >> train;
+
+    std::cout << std::endl;
+
+    if (train == "train")
+    {
+        std::cout << "Input id of the face to learn: ";
+
+        int faceId;
+
+        std::cin >> faceId;
+
+        std::cout << std::endl << "Training face: " << faceId << std::endl;
+
+        // Create FaceDetectionTracker.
+        fdPtr = std::make_shared<FaceDetectionTracker>(true, faceId);
+
+        // fdPtr->trainDetector();
+    }
+    else
+    {
+        // Create FaceDetectionTracker.
+        fdPtr = std::make_shared<FaceDetectionTracker>(false);
+
+        std::cout << "Recognizing.." << std::endl;
+    }
 
     while (ros::ok())
     {
         ros::spinOnce();
 
-        fd.track();
+        if (train != "train")
+        {
+
+
+            fdPtr->track();
+        }
     }
+
 
     return 0;
 }

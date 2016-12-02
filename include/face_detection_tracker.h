@@ -26,6 +26,7 @@
 #include <sstream>
 #include <string>
 #include <map>
+#include <memory>
 
 // ROS related includes.
 #include <ros/ros.h>
@@ -61,6 +62,14 @@
 using namespace cv;
 
 
+const std::string PATH = "/home/maetulj/tiago_ws/src/face_detection_tracker/";
+
+const int HEIGHT = 48;
+const int WIDTH = 48;
+
+const int FRAMESRECORDED = 50;
+
+
 /**
  * @brief      Class for face detection and tracking.
  */
@@ -71,7 +80,7 @@ public:
     /**
      * @brief      Constructor for the class.
      */
-    FaceDetectionTracker();
+    FaceDetectionTracker(bool train, int faceId = 0);
 
     /**
      * @brief      Destructor.
@@ -124,6 +133,8 @@ private:
 
     // Person id.
     static int m_personId;
+
+    static bool savedImages;
 
     // The ros node handle.
     ros::NodeHandle m_node;
